@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login — Result Checker Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0a1628;
+      --blue: #1e3a5f;
+      --accent: #2563eb;
+      --accent-light: #3b82f6;
+      --gold: #f59e0b;
+      --white: #ffffff;
+      --offwhite: #f0f4ff;
+      --muted: #94a3b8;
+      --border: rgba(255,255,255,0.08);
+      --error-bg: #fee2e2;
+      --error-text: #991b1b;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Background geometry */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -30%;
+      right: -15%;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -20%;
+      left: -10%;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(30,58,95,0.5) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Grid lines */
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .page-wrap {
+      display: flex;
+      width: 100%;
+      max-width: 1000px;
+      min-height: 540px;
+      margin: 20px;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* LEFT PANEL */
+    .left-panel {
+      flex: 1;
+      background: linear-gradient(145deg, #1e3a5f 0%, #0f2440 60%, #0a1628 100%);
+      padding: 56px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 220px;
+      height: 220px;
+      border: 40px solid rgba(37,99,235,0.12);
+      border-radius: 50%;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: -40px;
+      width: 160px;
+      height: 160px;
+      border: 30px solid rgba(245,158,11,0.08);
+      border-radius: 50%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--accent);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 8px 24px rgba(37,99,235,0.4);
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-text {
+      z-index: 1;
+    }
+
+    .hero-text h1 {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.15;
+      letter-spacing: -0.8px;
+      margin-bottom: 16px;
+    }
+
+    .hero-text h1 span {
+      color: var(--gold);
+    }
+
+    .hero-text p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 280px;
+    }
+
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 1;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+    }
+
+    .feature-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-light);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* RIGHT PANEL */
+    .right-panel {
+      width: 420px;
+      background: var(--white);
+      padding: 56px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .login-header {
+      margin-bottom: 36px;
+    }
+
+    .login-header p {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .login-header h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.5px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      width: 18px;
+      height: 18px;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 13px 14px 13px 42px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--navy);
+      background: #f8fafc;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--accent);
+      background: var(--white);
+      box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+      letter-spacing: 0.2px;
+      box-shadow: 0 8px 24px rgba(37,99,235,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-btn:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 12px 32px rgba(37,99,235,0.4);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-btn.loading {
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    .login-btn .btn-text { transition: opacity 0.2s; }
+
+    .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    .errorBox {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: var(--error-bg);
+      color: var(--error-text);
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      border-left: 3px solid #ef4444;
+    }
+
+    .footer-note {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 700px) {
+      .left-panel { display: none; }
+      .page-wrap { max-width: 420px; }
+      .right-panel { width: 100%; padding: 40px 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <div class="page-wrap">
+    <div class="left-panel">
+      <div class="brand">
+        <div class="brand-icon">🎓</div>
+        <div>
+          <div class="brand-name">Result Checker</div>
+          <div class="brand-sub">Admin Portal</div>
+        </div>
+      </div>
+
+      <div class="hero-text">
+        <h1>Manage Results <span>Securely</span> & Efficiently</h1>
+        <p>A complete portal for uploading, managing, and monitoring student academic results with PIN-based security.</p>
+      </div>
+
+      <div class="features">
+        <div class="feature-item"><div class="feature-dot"></div> Upload & manage student result PDFs</div>
+        <div class="feature-item"><div class="feature-dot"></div> PIN-controlled secure student access</div>
+        <div class="feature-item"><div class="feature-dot"></div> Real-time access logs & monitoring</div>
+        <div class="feature-item"><div class="feature-dot"></div> One-time view token protection</div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="login-header">
+        <p>Welcome Back</p>
+        <h2>Sign in to Dashboard</h2>
+      </div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <div class="input-wrap">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <input type="email" id="email" placeholder="admin@school.edu" autocomplete="email"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter') adminLogin()"/>
+        </div>
+      </div>
+
+      <button class="login-btn" onclick="adminLogin()" id="loginBtn">
+        <span class="btn-text">Sign In</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+
+      <div class="errorBox" id="errorBox"></div>
+
+      <div class="footer-note">Protected area — authorized personnel only</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:5000";
+
+    async function adminLogin() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorBox = document.getElementById("errorBox");
+      const btn = document.getElementById("loginBtn");
+      const spinner = document.getElementById("spinner");
+
+      errorBox.style.display = "none";
+
+      if (!email || !password) {
+        showError("Email and password are required.");
+        return;
+      }
+
+      btn.classList.add("loading");
+      btn.querySelector(".btn-text").style.opacity = "0";
+      spinner.style.display = "block";
+
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showError(data.message || "Login failed. Check your credentials.");
+          return;
+        }
+
+        localStorage.setItem("adminToken", data.token);
+        localStorage.setItem("adminName", data.admin.name);
+        window.location.href = "admin-dashboard.html";
+
+      } catch (error) {
+        showError("Unable to connect to server. Try again.");
+      } finally {
+        btn.classList.remove("loading");
+        btn.querySelector(".btn-text").style.opacity = "1";
+        spinner.style.display = "none";
+      }
+    }
+
+    function showError(msg) {
+      const errorBox = document.getElementById("errorBox");
+      errorBox.style.display = "block";
+      errorBox.innerText = "⚠ " + msg;
+    }
+  </script>
+</body>
+</html>
