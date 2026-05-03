@@ -4,12 +4,20 @@ node_modules/
 # Environment variables — NEVER commit this
 .env
 
-# Uploaded result PDFs
+# Uploaded result PDFs (local dev only — production uses Cloudinary)
 uploads/
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Word/Office documents
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.pptx
+*.ppt
 
 # Logs
 *.log
