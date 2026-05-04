@@ -1,12 +1,13 @@
-import fs from "fs";
-import path from "path";
 import jwt from "jsonwebtoken";
-
 import Result from "../models/Result.js";
 import Student from "../models/Student.js";
+import { cloudinary } from "../config/cloudinaryConfig.js";
+
+// Helper to access cloudinary v2
+const cld = cloudinary.v2;
 
 // ===============================
-// UPLOAD RESULT
+// UPLOAD RESULT (Cloudinary)
 // ===============================
 export const uploadResult = async (req, res) => {
   try {
@@ -22,8 +23,10 @@ export const uploadResult = async (req, res) => {
 
     const student = await Student.findOne({ studentId });
     if (!student) {
-      // Clean up uploaded file if student doesn't exist
-      fs.existsSync(req.file.path) && fs.unlinkSync(req.file.path);
+      // Delete uploaded file from Cloudinary since student doesn't exist
+      await cld.uploader.destroy(req.file.filename, {
+        resource_type: "raw",
+      });
       return res.status(404).json({ message: "Student not found" });
     }
 
@@ -32,8 +35,10 @@ export const uploadResult = async (req, res) => {
       className,
       term,
       session,
-      filePath: req.file.path,
+      filePath: req.file.path,         // Cloudinary secure URL
+      cloudinaryId: req.file.filename, // Cloudinary public_id for deletion
       uploadedBy: req.admin.id,
+      uploadedByRole: "Admin",
     });
 
     res.status(201).json({
@@ -46,7 +51,7 @@ export const uploadResult = async (req, res) => {
 };
 
 // ===============================
-// DELETE RESULT (DB + PDF FILE)
+// DELETE RESULT (DB + Cloudinary)
 // ===============================
 export const deleteResult = async (req, res) => {
   try {
@@ -57,13 +62,13 @@ export const deleteResult = async (req, res) => {
       return res.status(404).json({ message: "Result not found" });
     }
 
-    // Build full absolute path and delete the PDF file
-    const filePath = path.join(process.cwd(), result.filePath);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // Delete PDF from Cloudinary
+    if (result.cloudinaryId) {
+      await cld.uploader.destroy(result.cloudinaryId, {
+        resource_type: "raw",
+      });
     }
 
-    // Delete result from database
     await Result.findByIdAndDelete(resultId);
 
     res.status(200).json({
@@ -107,20 +112,16 @@ export const generateViewToken = async (req, res) => {
 
 // ===============================
 // VIEW PDF USING TOKEN (PUBLIC)
+// Redirects to Cloudinary URL
 // ===============================
 export const viewResultPdf = async (req, res) => {
   try {
     const { token } = req.params;
 
-    if (!token) {
-      return res.status(400).json({ message: "Token is required" });
-    }
-
-    // Verify the JWT token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (err) {
+    } catch {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
@@ -129,15 +130,8 @@ export const viewResultPdf = async (req, res) => {
       return res.status(404).json({ message: "Result not found" });
     }
 
-    const filePath = path.join(process.cwd(), result.filePath);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: "PDF file not found on server" });
-    }
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "inline");
-
-    return res.sendFile(filePath);
+    // Redirect to Cloudinary secure URL
+    return res.redirect(result.filePath);
   } catch (error) {
     return res.status(500).json({ message: "Server error", error: error.message });
   }

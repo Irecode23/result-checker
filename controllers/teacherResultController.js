@@ -1,20 +1,15 @@
-import fs from "fs";
-import path from "path";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
 import Result from "../models/Result.js";
 import Student from "../models/Student.js";
 import Teacher from "../models/Teacher.js";
+import { cloudinary } from "../config/cloudinaryConfig.js";
+const cld = cloudinary.v2;
 
-// ── Generate 10-digit PIN ──
 const generatePin = () => {
   return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };
 
-// ===============================
-// UPLOAD RESULT (Teacher only)
-// Auto-generates a NEW PIN for the student on every upload
-// ===============================
+// ── UPLOAD RESULT (Teacher — auto-generates new PIN) ──
 export const teacherUploadResult = async (req, res) => {
   try {
     const { studentId, term, session } = req.body;
@@ -32,20 +27,20 @@ export const teacherUploadResult = async (req, res) => {
     // Student must belong to teacher's class
     const student = await Student.findOne({ studentId, className: teacher.className });
     if (!student) {
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      // Clean up Cloudinary upload since student not found
+      await cld.uploader.destroy(req.file.filename, { resource_type: "raw" });
       return res.status(404).json({ message: "Student not found in your class" });
     }
 
-    // ── Generate brand new PIN for this result ──
+    // ── Auto-generate new PIN for this result ──
     const plainPin = generatePin();
     const pinHash = await bcrypt.hash(plainPin, 10);
 
-    // ── Update student's PIN ──
     student.pinHash = pinHash;
     student.pinUsageCount = 0;
     student.pinUsageLimit = 5;
     student.isPinActive = true;
-    student.currentPin = plainPin; // Store plain PIN so admin can see it
+    student.currentPin = plainPin;
     await student.save();
 
     // ── Save result ──
@@ -54,7 +49,8 @@ export const teacherUploadResult = async (req, res) => {
       className: teacher.className,
       term,
       session,
-      filePath: req.file.path,
+      filePath: req.file.path,         // Cloudinary secure URL
+      cloudinaryId: req.file.filename, // Cloudinary public_id
       uploadedBy: teacher._id,
       uploadedByRole: "Teacher",
     });
@@ -68,7 +64,7 @@ export const teacherUploadResult = async (req, res) => {
   }
 };
 
-// ── GET MY UPLOADED RESULTS (Teacher only sees their own) ──
+// ── GET MY UPLOADED RESULTS ──
 export const getMyUploadedResults = async (req, res) => {
   try {
     const results = await Result.find({ uploadedBy: req.teacher.id }).sort({ createdAt: -1 });
@@ -82,7 +78,7 @@ export const getMyUploadedResults = async (req, res) => {
   }
 };
 
-// ── DELETE RESULT (Teacher can only delete their own) ──
+// ── DELETE RESULT (Teacher owns it) ──
 export const teacherDeleteResult = async (req, res) => {
   try {
     const { resultId } = req.params;
@@ -94,8 +90,10 @@ export const teacherDeleteResult = async (req, res) => {
       return res.status(403).json({ message: "You can only delete results you uploaded" });
     }
 
-    const filePath = path.join(process.cwd(), result.filePath);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    // Delete from Cloudinary
+    if (result.cloudinaryId) {
+      await cld.uploader.destroy(result.cloudinaryId, { resource_type: "raw" });
+    }
 
     await Result.findByIdAndDelete(resultId);
 

@@ -1,5 +1,3 @@
-import path from "path";
-import fs from "fs";
 import ViewToken from "../models/ViewToken.js";
 import Result from "../models/Result.js";
 
@@ -12,17 +10,14 @@ export const viewResultPdf = async (req, res) => {
     }
 
     const viewToken = await ViewToken.findOne({ token });
-
     if (!viewToken) {
       return res.status(404).json({ message: "Invalid or expired link" });
     }
 
-    // Check if token has already been used
     if (viewToken.used) {
       return res.status(403).json({ message: "This link has already been used. Please check your result again." });
     }
 
-    // Check if token has expired
     if (new Date() > viewToken.expiresAt) {
       return res.status(403).json({ message: "This link has expired. Please check your result again." });
     }
@@ -32,21 +27,12 @@ export const viewResultPdf = async (req, res) => {
       return res.status(404).json({ message: "Result not found" });
     }
 
-    // Mark token as used BEFORE sending file (prevents race condition)
+    // Mark token as used BEFORE redirecting
     viewToken.used = true;
     await viewToken.save();
 
-    const filePath = path.join(process.cwd(), result.filePath);
-
-    // Confirm the PDF file physically exists on disk
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: "PDF file not found on server. Contact admin." });
-    }
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "inline; filename=result.pdf");
-
-    return res.sendFile(filePath);
+    // Redirect student to Cloudinary PDF URL
+    return res.redirect(result.filePath);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

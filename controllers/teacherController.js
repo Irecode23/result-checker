@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import fs from "fs";
-import path from "path";
 import Teacher from "../models/Teacher.js";
 import Student from "../models/Student.js";
 import Result from "../models/Result.js";
+import { cloudinary } from "../config/cloudinaryConfig.js";
+const cld = cloudinary.v2;
 
 // ── CREATE TEACHER (Admin only) ──
 export const createTeacher = async (req, res) => {
@@ -16,28 +16,33 @@ export const createTeacher = async (req, res) => {
     }
 
     const exists = await Teacher.findOne({ email });
-    if (exists) return res.status(400).json({ message: "Teacher with this email already exists" });
+    if (exists) {
+      return res.status(400).json({ message: "Teacher with this email already exists" });
+    }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Build local image URL if photo was uploaded
+    // Cloudinary gives us req.file.path (secure URL) and req.file.filename (public_id)
     let imageUrl = null;
+    let imagePublicId = null;
     if (req.file) {
-      imageUrl = `http://localhost:${process.env.PORT || 5000}/uploads/teachers/${req.file.filename}`;
+      imageUrl = req.file.path;
+      imagePublicId = req.file.filename;
     }
 
     const teacher = await Teacher.create({
       firstName, lastName, email, passwordHash,
-      className, subject, imageUrl,
+      className, subject, imageUrl, imagePublicId,
       createdBy: req.admin.id,
     });
 
     res.status(201).json({
       message: "Teacher created successfully",
       teacher: {
-        id: teacher._id, firstName: teacher.firstName, lastName: teacher.lastName,
-        email: teacher.email, className: teacher.className,
-        subject: teacher.subject, imageUrl: teacher.imageUrl, isActive: teacher.isActive,
+        id: teacher._id, firstName: teacher.firstName,
+        lastName: teacher.lastName, email: teacher.email,
+        className: teacher.className, subject: teacher.subject,
+        imageUrl: teacher.imageUrl, isActive: teacher.isActive,
       },
     });
   } catch (error) {
@@ -45,7 +50,7 @@ export const createTeacher = async (req, res) => {
   }
 };
 
-// ── GET ALL TEACHERS (Admin only) ──
+// ── GET ALL TEACHERS ──
 export const getAllTeachers = async (req, res) => {
   try {
     const teachers = await Teacher.find().select("-passwordHash").sort({ createdAt: -1 });
@@ -59,7 +64,7 @@ export const getAllTeachers = async (req, res) => {
   }
 };
 
-// ── UPDATE TEACHER (Admin only) ──
+// ── UPDATE TEACHER ──
 export const updateTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
@@ -76,16 +81,13 @@ export const updateTeacher = async (req, res) => {
     if (typeof isActive !== "undefined") teacher.isActive = isActive;
     if (password) teacher.passwordHash = await bcrypt.hash(password, 10);
 
-    // Replace image if new one uploaded
+    // Replace image on Cloudinary
     if (req.file) {
-      if (teacher.imageUrl) {
-        const oldFilename = teacher.imageUrl.split("/uploads/teachers/")[1];
-        if (oldFilename) {
-          const oldPath = path.join(process.cwd(), "uploads/teachers", oldFilename);
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        }
+      if (teacher.imagePublicId) {
+        await cld.uploader.destroy(teacher.imagePublicId);
       }
-      teacher.imageUrl = `http://localhost:${process.env.PORT || 5000}/uploads/teachers/${req.file.filename}`;
+      teacher.imageUrl = req.file.path;
+      teacher.imagePublicId = req.file.filename;
     }
 
     await teacher.save();
@@ -93,9 +95,10 @@ export const updateTeacher = async (req, res) => {
     res.status(200).json({
       message: "Teacher updated successfully",
       teacher: {
-        id: teacher._id, firstName: teacher.firstName, lastName: teacher.lastName,
-        email: teacher.email, className: teacher.className,
-        subject: teacher.subject, imageUrl: teacher.imageUrl, isActive: teacher.isActive,
+        id: teacher._id, firstName: teacher.firstName,
+        lastName: teacher.lastName, email: teacher.email,
+        className: teacher.className, subject: teacher.subject,
+        imageUrl: teacher.imageUrl, isActive: teacher.isActive,
       },
     });
   } catch (error) {
@@ -103,7 +106,7 @@ export const updateTeacher = async (req, res) => {
   }
 };
 
-// ── DELETE TEACHER (Admin only) ──
+// ── DELETE TEACHER ──
 export const deleteTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
@@ -111,13 +114,9 @@ export const deleteTeacher = async (req, res) => {
     const teacher = await Teacher.findById(teacherId);
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
-    // Delete photo from disk
-    if (teacher.imageUrl) {
-      const filename = teacher.imageUrl.split("/uploads/teachers/")[1];
-      if (filename) {
-        const filePath = path.join(process.cwd(), "uploads/teachers", filename);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      }
+    // Delete image from Cloudinary
+    if (teacher.imagePublicId) {
+      await cld.uploader.destroy(teacher.imagePublicId);
     }
 
     await Teacher.findByIdAndDelete(teacherId);
@@ -159,9 +158,10 @@ export const teacherLogin = async (req, res) => {
       message: "Login successful",
       token,
       teacher: {
-        id: teacher._id, firstName: teacher.firstName, lastName: teacher.lastName,
-        email: teacher.email, className: teacher.className,
-        subject: teacher.subject, imageUrl: teacher.imageUrl,
+        id: teacher._id, firstName: teacher.firstName,
+        lastName: teacher.lastName, email: teacher.email,
+        className: teacher.className, subject: teacher.subject,
+        imageUrl: teacher.imageUrl,
       },
     });
   } catch (error) {
@@ -191,14 +191,14 @@ export const getTeacherProfile = async (req, res) => {
   }
 };
 
-// ── GET STUDENTS IN MY CLASS (Teacher) ──
+// ── GET STUDENTS IN MY CLASS ──
 export const getMyClassStudents = async (req, res) => {
   try {
     const teacher = await Teacher.findById(req.teacher.id);
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
     const students = await Student.find({ className: teacher.className })
-      .select("studentId fullName className")  // NO pin info
+      .select("studentId fullName className")
       .sort({ fullName: 1 });
 
     res.status(200).json({
@@ -212,15 +212,14 @@ export const getMyClassStudents = async (req, res) => {
   }
 };
 
-// ── GET STUDENT BY ID (Teacher — for upload verification) ──
+// ── GET STUDENT BY ID (for upload verification) ──
 export const getStudentById = async (req, res) => {
   try {
     const studentId = decodeURIComponent(req.params.studentId);
     const teacher = await Teacher.findById(req.teacher.id);
 
-    // Only find student if they belong to teacher's class
     const student = await Student.findOne({ studentId, className: teacher.className })
-      .select("studentId fullName className"); // NO pin info
+      .select("studentId fullName className");
 
     if (!student) return res.status(404).json({ message: "Student not found in your class" });
 

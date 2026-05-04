@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.js";
 
 import adminRoutes from "./routes/adminRoutes.js";
@@ -17,23 +18,56 @@ dotenv.config();
 
 const app = express();
 
-// ── Middleware ──
-app.use(cors());
+// ── CORS ──
+app.use(cors({
+  origin: process.env.CLIENT_URL || "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+// ── Body Parsers ──
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Serve frontend HTML files from public/ ──
+// ── Rate Limiting ──
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  message: { message: "Too many requests. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const checkResultLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: "Too many attempts. Please wait 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: "Too many login attempts. Please wait 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use("/api", generalLimiter);
+app.use("/api/student/check-result", checkResultLimiter);
+app.use("/api/admin/login", loginLimiter);
+app.use("/api/teacher/login", loginLimiter);
+
+// ── Serve Frontend HTML files ──
 app.use(express.static("public"));
 
-// ── Serve uploaded files (PDFs + teacher images) ──
-app.use("/uploads", express.static("uploads"));
-
-// ── Connect DB ──
+// ── Connect Database ──
 connectDB();
 
-// ── Health check ──
+// ── Health Check ──
 app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "OK", message: "Server is running ✅" });
+  res.status(200).json({ status: "OK", message: "Result Checker API is running ✅" });
 });
 
 // ── Routes ──
@@ -47,22 +81,21 @@ app.use("/api/student", viewResultRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/teacher/results", teacherResultRoutes);
 
-// ── 404 handler ──
+// ── 404 Handler ──
 app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.originalUrl} not found` });
 });
 
-// ── Global error handler ──
+// ── Global Error Handler ──
 app.use((err, req, res, next) => {
   console.error("Error:", err.message);
-  res.status(err.status || 500).json({ message: err.message || "Internal server error" });
+  res.status(err.status || 500).json({
+    message: err.message || "Internal server error",
+  });
 });
 
-// ── Start ──
+// ── Start Server ──
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`🔵 Admin    → http://localhost:${PORT}/admin-login.html`);
-  console.log(`🟢 Teacher  → http://localhost:${PORT}/teacher-login.html`);
-  console.log(`🎓 Student  → http://localhost:${PORT}/student.html`);
+  console.log(`✅ Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });

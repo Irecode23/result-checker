@@ -8,7 +8,8 @@ const teacherSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     className: { type: String, required: true },
     subject: { type: String, required: true },
-    imageUrl: { type: String, default: null },
+    imageUrl: { type: String, default: null },         // Cloudinary secure URL
+    imagePublicId: { type: String, default: null },    // Cloudinary public_id for deletion
     role: { type: String, default: "teacher" },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
