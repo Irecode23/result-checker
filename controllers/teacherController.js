@@ -4,7 +4,6 @@ import Teacher from "../models/Teacher.js";
 import Student from "../models/Student.js";
 import Result from "../models/Result.js";
 import { cloudinary } from "../config/cloudinaryConfig.js";
-const cld = cloudinary.v2;
 
 // ── CREATE TEACHER (Admin only) ──
 export const createTeacher = async (req, res) => {
@@ -84,7 +83,7 @@ export const updateTeacher = async (req, res) => {
     // Replace image on Cloudinary
     if (req.file) {
       if (teacher.imagePublicId) {
-        await cld.uploader.destroy(teacher.imagePublicId);
+        await cloudinary.uploader.destroy(teacher.imagePublicId);
       }
       teacher.imageUrl = req.file.path;
       teacher.imagePublicId = req.file.filename;
@@ -116,7 +115,7 @@ export const deleteTeacher = async (req, res) => {
 
     // Delete image from Cloudinary
     if (teacher.imagePublicId) {
-      await cld.uploader.destroy(teacher.imagePublicId);
+      await cloudinary.uploader.destroy(teacher.imagePublicId);
     }
 
     await Teacher.findByIdAndDelete(teacherId);

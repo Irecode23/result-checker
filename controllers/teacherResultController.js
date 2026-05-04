@@ -3,7 +3,6 @@ import Result from "../models/Result.js";
 import Student from "../models/Student.js";
 import Teacher from "../models/Teacher.js";
 import { cloudinary } from "../config/cloudinaryConfig.js";
-const cld = cloudinary.v2;
 
 const generatePin = () => {
   return Math.floor(1000000000 + Math.random() * 9000000000).toString();
@@ -28,7 +27,7 @@ export const teacherUploadResult = async (req, res) => {
     const student = await Student.findOne({ studentId, className: teacher.className });
     if (!student) {
       // Clean up Cloudinary upload since student not found
-      await cld.uploader.destroy(req.file.filename, { resource_type: "raw" });
+      await cloudinary.uploader.destroy(req.file.filename, { resource_type: "raw" });
       return res.status(404).json({ message: "Student not found in your class" });
     }
 
@@ -92,7 +91,7 @@ export const teacherDeleteResult = async (req, res) => {
 
     // Delete from Cloudinary
     if (result.cloudinaryId) {
-      await cld.uploader.destroy(result.cloudinaryId, { resource_type: "raw" });
+      await cloudinary.uploader.destroy(result.cloudinaryId, { resource_type: "raw" });
     }
 
     await Result.findByIdAndDelete(resultId);

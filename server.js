@@ -1,5 +1,6 @@
+import "./config/env.js"; // MUST be first — loads dotenv before anything else
+
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.js";
@@ -13,8 +14,6 @@ import viewResultRoutes from "./routes/viewResultRoutes.js";
 import resultAdminRoutes from "./routes/resultAdminRoutes.js";
 import teacherRoutes from "./routes/teacherRoutes.js";
 import teacherResultRoutes from "./routes/teacherResultRoutes.js";
-
-dotenv.config();
 
 const app = express();
 

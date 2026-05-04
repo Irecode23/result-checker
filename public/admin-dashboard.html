@@ -676,7 +676,12 @@
             <td>${r.session}</td>
             <td><span class="badge badge-active">${r.uploadedByRole || "Teacher"}</span></td>
             <td>${new Date(r.createdAt).toLocaleDateString("en-GB", {day:"2-digit",month:"short",year:"numeric"})}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteResult('${r._id}')">Delete</button></td>
+            <td>
+              <div class="action-group">
+                <button class="btn btn-purple btn-sm" onclick="window.open('${r.filePath}', '_blank')">View PDF</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteResult('${r._id}')">Delete</button>
+              </div>
+            </td>
           </tr>`).join("");
       } catch(e) { tbody.innerHTML = `<tr class="loading-row"><td colspan="7">Error loading.</td></tr>`; }
     }

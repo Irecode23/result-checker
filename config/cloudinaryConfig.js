@@ -1,35 +1,49 @@
-import cloudinary from "cloudinary";
+import "./env.js";
+import cloudinaryModule from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
 
-cloudinary.v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const cloudinary = cloudinaryModule.v2;
 
-// ── PDF Storage (for result uploads) ──
+const getCloudinaryConfig = () => {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  return cloudinary;
+};
+
+// ── PDF Storage ──
 const pdfStorage = new CloudinaryStorage({
-  cloudinary: cloudinary.v2,
-  params: {
-    folder: "result-checker/results",
-    resource_type: "raw",
-    format: "pdf",
-    public_id: (req, file) =>
-      `result_${Date.now()}_${Math.round(Math.random() * 1e9)}`,
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    getCloudinaryConfig();
+    return {
+      folder: "result-checker/results",
+      resource_type: "raw",
+      format: "pdf",
+      type: "upload",          // ← Makes it publicly accessible
+      access_mode: "public",   // ← Allows direct URL access
+      public_id: `result_${Date.now()}_${Math.round(Math.random() * 1e9)}`,
+    };
   },
 });
 
-// ── Image Storage (for teacher profile photos) ──
+// ── Image Storage ──
 const imageStorage = new CloudinaryStorage({
-  cloudinary: cloudinary.v2,
-  params: {
-    folder: "result-checker/teachers",
-    resource_type: "image",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }],
-    public_id: (req, file) =>
-      `teacher_${Date.now()}_${Math.round(Math.random() * 1e9)}`,
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    getCloudinaryConfig();
+    return {
+      folder: "result-checker/teachers",
+      resource_type: "image",
+      allowed_formats: ["jpg", "jpeg", "png", "webp"],
+      type: "upload",
+      access_mode: "public",
+      transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }],
+      public_id: `teacher_${Date.now()}_${Math.round(Math.random() * 1e9)}`,
+    };
   },
 });
 
@@ -49,14 +63,14 @@ const imageFilter = (req, file, cb) => {
 export const uploadPdf = multer({
   storage: pdfStorage,
   fileFilter: pdfFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 // ── Image upload instance ──
 export const uploadImage = multer({
   storage: imageStorage,
   fileFilter: imageFilter,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  limits: { fileSize: 2 * 1024 * 1024 },
 });
 
 export { cloudinary };

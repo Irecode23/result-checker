@@ -3,9 +3,6 @@ import Result from "../models/Result.js";
 import Student from "../models/Student.js";
 import { cloudinary } from "../config/cloudinaryConfig.js";
 
-// Helper to access cloudinary v2
-const cld = cloudinary.v2;
-
 // ===============================
 // UPLOAD RESULT (Cloudinary)
 // ===============================
@@ -24,7 +21,7 @@ export const uploadResult = async (req, res) => {
     const student = await Student.findOne({ studentId });
     if (!student) {
       // Delete uploaded file from Cloudinary since student doesn't exist
-      await cld.uploader.destroy(req.file.filename, {
+      await cloudinary.uploader.destroy(req.file.filename, {
         resource_type: "raw",
       });
       return res.status(404).json({ message: "Student not found" });
@@ -64,7 +61,7 @@ export const deleteResult = async (req, res) => {
 
     // Delete PDF from Cloudinary
     if (result.cloudinaryId) {
-      await cld.uploader.destroy(result.cloudinaryId, {
+      await cloudinary.uploader.destroy(result.cloudinaryId, {
         resource_type: "raw",
       });
     }
