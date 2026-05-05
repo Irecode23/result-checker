@@ -415,7 +415,7 @@
   </div>
 
   <script>
-    const API_BASE = "http://localhost:5000";
+    const API_BASE = window.location.origin;
 
     async function adminLogin() {
       const email = document.getElementById("email").value.trim();
