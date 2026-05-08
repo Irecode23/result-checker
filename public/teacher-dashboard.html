@@ -3,191 +3,260 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Teacher Dashboard — Result Checker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <title>Teacher Dashboard — ByteAcademy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --navy: #0a1628; --blue: #1e3a5f; --accent: #2563eb;
-      --green: #16a34a; --green-light: #dcfce7; --green-dark: #15803d;
-      --white: #ffffff; --bg: #f0f4ff; --muted: #64748b;
+      --navy: #050d1a; --navy2: #0a1628; --blue: #1a3a6e;
+      --green: #16a34a; --green2: #15803d; --green-pale: #f0fdf4; --green-border: #bbf7d0;
+      --accent: #2563eb; --gold: #f59e0b;
+      --white: #fff; --bg: #f0f4ff; --muted: #64748b;
       --border: #e2e8f0; --danger: #dc2626; --danger-bg: #fee2e2;
       --sidebar-w: 260px;
     }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--navy); min-height: 100vh; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--navy2); min-height: 100vh; }
 
     /* SIDEBAR */
     .sidebar {
-      position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh;
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w); height: 100vh;
       background: var(--navy); display: flex; flex-direction: column;
-      z-index: 100; box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+      z-index: 200; box-shadow: 4px 0 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease; overflow-y: auto;
     }
-    .sidebar-brand { padding: 20px 18px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 12px; }
-    .brand-icon { width: 42px; height: 42px; background: var(--green); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-    .brand-text .name { font-size: 14px; font-weight: 800; color: #fff; }
-    .brand-text .sub { font-size: 11px; color: rgba(255,255,255,0.35); }
+    .sidebar.collapsed { transform: translateX(-100%); }
 
-    /* Teacher Profile Card in Sidebar */
-    .teacher-card {
-      margin: 16px 12px; padding: 16px;
-      background: linear-gradient(135deg, rgba(22,163,74,0.2), rgba(37,99,235,0.1));
-      border: 1px solid rgba(22,163,74,0.2); border-radius: 14px;
+    .sidebar-brand {
+      padding: 20px 18px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
     }
-    .teacher-avatar-wrap { display: flex; justify-content: center; margin-bottom: 12px; }
-    .teacher-avatar {
-      width: 72px; height: 72px; border-radius: 50%;
-      border: 3px solid var(--green); object-fit: cover;
-      background: var(--green); display: flex; align-items: center; justify-content: center;
-      font-size: 28px; font-weight: 800; color: white; overflow: hidden;
+    .brand-logo {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--green), #166534);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0; box-shadow: 0 4px 16px rgba(22,163,74,0.4);
     }
-    .teacher-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .teacher-name { font-size: 15px; font-weight: 800; color: #fff; text-align: center; }
-    .teacher-meta { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-top: 4px; }
-    .teacher-badges { display: flex; gap: 6px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
-    .t-badge { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6); }
+    .brand-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: white; }
+    .brand-name span { color: var(--gold); }
+    .brand-sub { font-size: 10px; color: rgba(255,255,255,0.3); }
+    .sidebar-close { display: none; margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.4); font-size: 20px; cursor: pointer; padding: 4px; }
 
-    .sidebar-nav { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; overflow-y: auto; }
-    .nav-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,0.25); padding: 10px 10px 4px; text-transform: uppercase; }
+    /* Teacher Profile in Sidebar */
+    .teacher-profile {
+      margin: 14px 12px;
+      background: linear-gradient(135deg, rgba(22,163,74,0.15), rgba(22,163,74,0.05));
+      border: 1px solid rgba(22,163,74,0.15);
+      border-radius: 14px; padding: 16px; text-align: center;
+    }
+    .t-avatar {
+      width: 68px; height: 68px; border-radius: 50%;
+      border: 2px solid rgba(22,163,74,0.4);
+      background: var(--green); margin: 0 auto 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: white;
+      overflow: hidden;
+    }
+    .t-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .t-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: white; }
+    .t-email { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; word-break: break-all; }
+    .t-tags { display: flex; gap: 6px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+    .t-tag { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.55); }
+
+    .sidebar-nav { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+    .nav-section { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.2); padding: 10px 10px 4px; }
     .nav-item {
-      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-      border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
-      color: rgba(255,255,255,0.55); transition: all 0.18s;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,0.5); transition: all 0.18s;
       border: none; background: none; width: 100%; text-align: left;
+      font-family: 'DM Sans', sans-serif;
     }
-    .nav-item svg { width: 17px; height: 17px; flex-shrink: 0; }
-    .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
-    .nav-item.active { background: var(--green); color: #fff; box-shadow: 0 4px 16px rgba(22,163,74,0.35); }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+    .nav-item.active { background: var(--green); color: white; font-weight: 600; box-shadow: 0 4px 16px rgba(22,163,74,0.3); }
 
-    .sidebar-footer { padding: 14px 12px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .sidebar-footer { padding: 14px 12px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
     .logout-btn {
-      width: 100%; padding: 10px; background: rgba(220,38,38,0.12);
-      color: #f87171; border: 1px solid rgba(220,38,38,0.2); border-radius: 10px;
-      font-size: 13px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      gap: 8px; transition: all 0.18s;
+      width: 100%; padding: 10px;
+      background: rgba(220,38,38,0.1); color: #f87171;
+      border: 1px solid rgba(220,38,38,0.15); border-radius: 10px;
+      font-size: 12px; font-weight: 700; font-family: 'DM Sans', sans-serif;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.18s;
     }
-    .logout-btn:hover { background: rgba(220,38,38,0.22); }
+    .logout-btn:hover { background: rgba(220,38,38,0.2); }
+
+    /* OVERLAY */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; backdrop-filter: blur(4px); }
+    .overlay.show { display: block; }
 
     /* MAIN */
-    .main { margin-left: var(--sidebar-w); min-height: 100vh; }
-    .topbar {
-      height: 66px; background: #fff; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 28px; position: sticky; top: 0; z-index: 50;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    }
-    .page-title { font-size: 18px; font-weight: 800; color: var(--navy); }
-    .class-badge { background: var(--green-light); color: var(--green-dark); font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 20px; }
-    .content { padding: 26px; }
-    .section { display: none; }
-    .section.active { display: block; }
+    .main { margin-left: var(--sidebar-w); min-height: 100vh; transition: margin 0.3s; }
 
-    /* STAT CARDS */
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: #fff; padding: 20px; border-radius: 16px; border: 1px solid var(--border); display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
-    .stat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-    .stat-icon.green { background: var(--green-light); }
-    .stat-icon.blue { background: #eff6ff; }
-    .stat-icon.amber { background: #fef3c7; }
-    .stat-info .val { font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1; }
-    .stat-info .lbl { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 4px; }
+    .topbar {
+      height: 64px; background: white; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 12px rgba(0,0,0,0.04);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .menu-toggle { display: none; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; color: var(--navy2); transition: background 0.2s; }
+    .menu-toggle:hover { background: var(--bg); }
+    .menu-toggle svg { width: 22px; height: 22px; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 800; color: var(--navy2); }
+    .class-badge { background: var(--green-pale); color: var(--green2); border: 1px solid var(--green-border); font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; }
+
+    .content { padding: 24px; }
+    .section { display: none; }
+    .section.active { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card {
+      background: white; padding: 18px; border-radius: 14px;
+      border: 1px solid var(--border); display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .si-green { background: #dcfce7; } .si-blue { background: #eff6ff; } .si-amber { background: #fef3c7; }
+    .stat-val { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: var(--navy2); line-height: 1; }
+    .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
     /* CARD */
-    .card { background: #fff; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
-    .card-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .card-header h3 { font-size: 16px; font-weight: 800; color: var(--navy); }
+    .card { background: white; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 20px; }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .card-header h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--navy2); }
     .card-header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .card-body { padding: 24px; }
+    .card-body { padding: 20px; }
 
     /* FORM */
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
     .form-group.span2 { grid-column: span 2; }
     .form-group label { font-size: 11px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.8px; }
     .form-group input, .form-group select {
-      padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
-      font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
-      color: var(--navy); background: #f8fafc; outline: none; transition: all 0.18s;
+      padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 13px; font-family: 'DM Sans', sans-serif;
+      color: var(--navy2); background: #f8fafc; outline: none; transition: all 0.18s;
     }
-    .form-group input:focus, .form-group select:focus { border-color: var(--green); background: #fff; box-shadow: 0 0 0 3px rgba(22,163,74,0.08); }
-    .form-group input[type="file"] { padding: 9px 14px; cursor: pointer; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--green); background: white; box-shadow: 0 0 0 3px rgba(22,163,74,0.08); }
+    .form-group input[type="file"] { padding: 8px 12px; cursor: pointer; }
 
-    /* STUDENT LOOKUP BOX */
-    .lookup-box {
-      background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 12px;
-      padding: 14px 16px; margin-top: 12px; display: none;
+    /* STUDENT LOOKUP */
+    .verify-bar { display: flex; gap: 10px; align-items: flex-start; }
+    .verify-input {
+      flex: 1; padding: 10px 12px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+      outline: none; transition: all 0.18s; color: var(--navy2); background: #f8fafc;
     }
-    .lookup-box .lookup-title { font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .verify-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,163,74,0.08); }
+
+    .lookup-result {
+      background: var(--green-pale); border: 1.5px solid var(--green-border);
+      border-radius: 12px; padding: 14px 16px; margin-top: 12px; display: none;
+    }
+    .lookup-title { font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
     .lookup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .lookup-item .lk-label { font-size: 10px; color: #4b7a5e; font-weight: 700; text-transform: uppercase; }
-    .lookup-item .lk-val { font-size: 14px; font-weight: 700; color: var(--navy); margin-top: 2px; }
+    .lookup-item .lk-val { font-size: 14px; font-weight: 700; color: var(--navy2); margin-top: 2px; }
 
     /* BUTTONS */
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
-    .btn svg { width: 16px; height: 16px; }
-    .btn-green { background: var(--green); color: #fff; box-shadow: 0 4px 14px rgba(22,163,74,0.25); }
-    .btn-green:hover { background: var(--green-dark); transform: translateY(-1px); }
-    .btn-ghost { background: #f0fdf4; color: var(--green); border: 1px solid #bbf7d0; }
-    .btn-ghost:hover { background: #dcfce7; }
-    .btn-danger { background: var(--danger); color: #fff; }
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border: none; border-radius: 10px; font-size: 12px; font-weight: 700; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
+    .btn svg { width: 14px; height: 14px; }
+    .btn-green { background: var(--green); color: white; box-shadow: 0 4px 12px rgba(22,163,74,0.25); }
+    .btn-green:hover { background: var(--green2); transform: translateY(-1px); }
+    .btn-ghost-green { background: var(--green-pale); color: var(--green); border: 1px solid var(--green-border); }
+    .btn-ghost-green:hover { background: #dcfce7; }
+    .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover { background: #b91c1c; }
-    .btn-sm { padding: 7px 12px; font-size: 12px; border-radius: 8px; }
+    .btn-sm { padding: 6px 12px; font-size: 11px; border-radius: 8px; }
 
     /* ALERTS */
-    .alert { padding: 12px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; display: none; margin-top: 14px; }
-    .alert-success { background: var(--green-light); color: #166534; border-left: 3px solid var(--green); }
+    .alert { padding: 11px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; display: none; margin-top: 12px; }
+    .alert-success { background: #dcfce7; color: #166534; border-left: 3px solid var(--green); }
     .alert-error { background: var(--danger-bg); color: #991b1b; border-left: 3px solid var(--danger); }
 
-    /* SEARCH BAR */
-    .search-bar { padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid var(--border); }
-    .search-bar input {
-      width: 100%; padding: 10px 14px 10px 38px; border: 1.5px solid var(--border);
-      border-radius: 10px; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif;
-      background: #fff; outline: none; color: var(--navy); transition: all 0.18s;
+    /* SEARCH */
+    .search-bar { padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid var(--border); }
+    .search-input {
+      width: 100%; padding: 9px 12px 9px 34px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 13px; font-family: 'DM Sans', sans-serif;
+      background: white; outline: none; color: var(--navy2); transition: all 0.18s;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: 10px center; background-size: 18px;
+      background-repeat: no-repeat; background-position: 10px center; background-size: 15px;
     }
-    .search-bar input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,163,74,0.08); }
+    .search-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,163,74,0.08); }
 
     /* TABLE */
     .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 500px; }
-    thead th { background: var(--navy); color: rgba(255,255,255,0.85); padding: 13px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; text-align: left; }
-    tbody td { padding: 13px 16px; font-size: 13px; color: var(--navy); border-top: 1px solid var(--border); }
-    tbody tr:hover td { background: #f0fdf4; transition: 0.15s; }
+    table { width: 100%; border-collapse: collapse; min-width: 400px; }
+    thead th { background: var(--navy2); color: rgba(255,255,255,0.8); padding: 11px 16px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; text-align: left; white-space: nowrap; }
+    tbody td { padding: 12px 16px; font-size: 13px; color: var(--navy2); border-top: 1px solid var(--border); }
+    tbody tr:hover td { background: var(--green-pale); }
     .loading-row td { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
-    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-    .badge-success { background: var(--green-light); color: #166534; }
-    .badge-danger { background: var(--danger-bg); color: #991b1b; }
+
+    /* STEP DIVIDER */
+    .step-header { font-size: 11px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .step-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .step-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .menu-toggle { display: flex; }
+      .sidebar-close { display: block; }
+    }
+    @media (max-width: 600px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .content { padding: 16px; }
+      .topbar { padding: 0 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.span2 { grid-column: span 1; }
+      .verify-bar { flex-direction: column; }
+      .lookup-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 400px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .class-badge { display: none; }
+    }
   </style>
 </head>
 <body>
-  <aside class="sidebar">
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-icon">📚</div>
-      <div class="brand-text"><div class="name">Result Checker</div><div class="sub">Teacher Portal</div></div>
+      <div class="brand-logo">📚</div>
+      <div>
+        <div class="brand-name">Byte<span>Academy</span></div>
+        <div class="brand-sub">Teacher Portal</div>
+      </div>
+      <button class="sidebar-close" onclick="closeSidebar()">✕</button>
     </div>
 
-    <!-- Teacher Profile Card -->
-    <div class="teacher-card">
-      <div class="teacher-avatar-wrap">
-        <div class="teacher-avatar" id="sidebarAvatar">T</div>
-      </div>
-      <div class="teacher-name" id="sidebarName">Loading...</div>
-      <div class="teacher-meta" id="sidebarMeta">—</div>
-      <div class="teacher-badges">
-        <div class="t-badge" id="sidebarClass">—</div>
-        <div class="t-badge" id="sidebarSubject">—</div>
+    <div class="teacher-profile">
+      <div class="t-avatar" id="sidebarAvatar">T</div>
+      <div class="t-name" id="sidebarName">Loading...</div>
+      <div class="t-email" id="sidebarEmail">—</div>
+      <div class="t-tags">
+        <div class="t-tag" id="sidebarClass">—</div>
+        <div class="t-tag" id="sidebarSubject">—</div>
       </div>
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-label">Overview</div>
+      <div class="nav-section">Overview</div>
       <button class="nav-item active" onclick="showSection('overview')">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </button>
-      <div class="nav-label">My Class</div>
+      <div class="nav-section">My Class</div>
       <button class="nav-item" onclick="showSection('students')">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         Class Students
@@ -198,13 +267,13 @@
       </button>
       <button class="nav-item" onclick="showSection('myresults')">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        My Uploaded Results
+        My Uploads
       </button>
     </nav>
 
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="logout()">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
         Sign Out
       </button>
     </div>
@@ -212,8 +281,13 @@
 
   <main class="main">
     <div class="topbar">
-      <div class="page-title" id="pageTitle">Dashboard Overview</div>
-      <div class="class-badge" id="topClassBadge">Loading...</div>
+      <div class="topbar-left">
+        <button class="menu-toggle" onclick="toggleSidebar()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+      </div>
+      <div class="class-badge" id="topClass">Loading...</div>
     </div>
 
     <div class="content">
@@ -221,32 +295,23 @@
       <!-- OVERVIEW -->
       <div class="section active" id="section-overview">
         <div class="stats-row">
-          <div class="stat-card">
-            <div class="stat-icon green">👨‍🎓</div>
-            <div class="stat-info"><div class="val" id="statStudents">—</div><div class="lbl">Students in My Class</div></div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon blue">📄</div>
-            <div class="stat-info"><div class="val" id="statUploaded">—</div><div class="lbl">Results I Uploaded</div></div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon amber">🏫</div>
-            <div class="stat-info"><div class="val" id="statClass">—</div><div class="lbl">My Class</div></div>
-          </div>
+          <div class="stat-card"><div class="stat-icon si-green">👨‍🎓</div><div><div class="stat-val" id="statStudents">—</div><div class="stat-lbl">My Class Students</div></div></div>
+          <div class="stat-card"><div class="stat-icon si-blue">📄</div><div><div class="stat-val" id="statUploaded">—</div><div class="stat-lbl">Results Uploaded</div></div></div>
+          <div class="stat-card"><div class="stat-icon si-amber">🏫</div><div><div class="stat-val" id="statClassName">—</div><div class="stat-lbl">My Class</div></div></div>
         </div>
 
-        <!-- Teacher Full Profile Card -->
+        <!-- Profile Card -->
         <div class="card">
-          <div class="card-header"><div><h3>My Profile</h3><p>Your account details as set by admin</p></div></div>
+          <div class="card-header"><div><h3>My Profile</h3><p>Your account details as configured by admin</p></div></div>
           <div class="card-body">
-            <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
-              <div id="profileAvatar" style="width:90px;height:90px;border-radius:50%;border:3px solid #16a34a;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:white;overflow:hidden;flex-shrink:0;"></div>
-              <div style="flex:1">
-                <div style="font-size:22px;font-weight:800;color:#0a1628" id="profileFullName">—</div>
-                <div style="font-size:13px;color:#64748b;margin-top:4px" id="profileEmail">—</div>
-                <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-                  <span style="background:#eff6ff;color:#1d4ed8;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700" id="profileClass">—</span>
-                  <span style="background:#f0fdf4;color:#166534;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700" id="profileSubject">—</span>
+            <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+              <div id="profileAvatar" style="width:80px;height:80px;border-radius:50%;border:3px solid #16a34a;background:#16a34a;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:white;overflow:hidden;flex-shrink:0"></div>
+              <div style="flex:1;min-width:200px">
+                <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--navy2)" id="profileName">—</div>
+                <div style="font-size:13px;color:var(--muted);margin-top:4px" id="profileEmail">—</div>
+                <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                  <span style="background:#eff6ff;color:#1d4ed8;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700" id="profileClass">—</span>
+                  <span style="background:#f0fdf4;color:#166534;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700" id="profileSubject">—</span>
                 </div>
               </div>
             </div>
@@ -258,14 +323,11 @@
       <div class="section" id="section-students">
         <div class="card">
           <div class="card-header">
-            <div><h3>My Class Students</h3><p id="classStudentsSubtitle">Students in your assigned class</p></div>
-            <button class="btn btn-ghost btn-sm" onclick="loadClassStudents()">
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              Refresh
-            </button>
+            <div><h3>My Class Students</h3><p id="classSubtitle">Students in your class</p></div>
+            <button class="btn btn-ghost-green btn-sm" onclick="loadClassStudents()">↺ Refresh</button>
           </div>
           <div class="search-bar">
-            <input type="text" id="studentSearch" placeholder="Search by name or student ID..." oninput="filterStudents()"/>
+            <input type="text" class="search-input" id="studentSearch" placeholder="Search by name or student ID..." oninput="filterStudents()"/>
           </div>
           <div class="table-wrap">
             <table>
@@ -279,28 +341,29 @@
       <!-- UPLOAD RESULT -->
       <div class="section" id="section-upload">
         <div class="card">
-          <div class="card-header"><div><h3>Upload Student Result</h3><p>Search student by ID, verify details, then upload PDF</p></div></div>
+          <div class="card-header"><div><h3>Upload Result PDF</h3><p>Verify student first, then upload their result</p></div></div>
           <div class="card-body">
-            <!-- Step 1: Lookup student -->
-            <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #e2e8f0">
-              <div style="font-size:12px;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Step 1 — Verify Student</div>
-              <div style="display:flex;gap:10px">
-                <input type="text" id="lookupId" placeholder="Enter Student ID to verify..." style="flex:1;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background:#f8fafc;"/>
-                <button class="btn btn-ghost" onclick="lookupStudent()">Verify Student</button>
-              </div>
-              <div class="lookup-box" id="lookupBox">
-                <div class="lookup-title">✅ Student Verified</div>
-                <div class="lookup-grid">
-                  <div class="lookup-item"><div class="lk-label">Student ID</div><div class="lk-val" id="lkStudentId">—</div></div>
-                  <div class="lookup-item"><div class="lk-label">Full Name</div><div class="lk-val" id="lkFullName">—</div></div>
-                  <div class="lookup-item"><div class="lk-label">Class</div><div class="lk-val" id="lkClass">—</div></div>
-                </div>
-              </div>
-              <div class="alert alert-error" id="lookupError"></div>
+            <div class="step-header">Step 1 — Verify Student</div>
+            <div class="verify-bar">
+              <input type="text" class="verify-input" id="lookupId" placeholder="Enter Student ID to verify..."/>
+              <button class="btn btn-ghost-green" onclick="lookupStudent()">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Verify
+              </button>
             </div>
+            <div class="lookup-result" id="lookupBox">
+              <div class="lookup-title">✅ Student Verified</div>
+              <div class="lookup-grid">
+                <div class="lookup-item"><div class="lk-label">Student ID</div><div class="lk-val" id="lkId">—</div></div>
+                <div class="lookup-item"><div class="lk-label">Full Name</div><div class="lk-val" id="lkName">—</div></div>
+                <div class="lookup-item"><div class="lk-label">Class</div><div class="lk-val" id="lkClass">—</div></div>
+              </div>
+            </div>
+            <div class="alert alert-error" id="lookupError"></div>
 
-            <!-- Step 2: Upload -->
-            <div style="font-size:12px;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px">Step 2 — Upload Result</div>
+            <hr class="step-divider"/>
+            <div class="step-header">Step 2 — Upload PDF</div>
+
             <div class="form-grid">
               <div class="form-group">
                 <label>Term</label>
@@ -318,7 +381,8 @@
                 <input type="file" id="resultPdf" accept="application/pdf"/>
               </div>
             </div>
-            <button class="btn btn-green" style="margin-top:16px" onclick="uploadResult()">
+
+            <button class="btn btn-green" style="margin-top:14px" onclick="uploadResult()">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
               Upload Result
             </button>
@@ -328,19 +392,16 @@
         </div>
       </div>
 
-      <!-- MY UPLOADED RESULTS -->
+      <!-- MY RESULTS -->
       <div class="section" id="section-myresults">
         <div class="card">
           <div class="card-header">
-            <div><h3>My Uploaded Results</h3><p>Results you have uploaded — you can only see and delete your own</p></div>
-            <button class="btn btn-ghost btn-sm" onclick="loadMyResults()">
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              Refresh
-            </button>
+            <div><h3>My Uploaded Results</h3><p>Only results you have uploaded</p></div>
+            <button class="btn btn-ghost-green btn-sm" onclick="loadMyResults()">↺ Refresh</button>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Student ID</th><th>Term</th><th>Session</th><th>Uploaded</th><th>Action</th></tr></thead>
+              <thead><tr><th>Student ID</th><th>Term</th><th>Session</th><th>Date</th><th>Action</th></tr></thead>
               <tbody id="myResultsTable"><tr class="loading-row"><td colspan="5">Loading...</td></tr></tbody>
             </table>
           </div>
@@ -359,44 +420,50 @@
 
     let allStudents = [];
 
-    // Populate sidebar & header from stored data immediately
     function populateSidebar(t) {
       document.getElementById("sidebarName").textContent = `${t.firstName} ${t.lastName}`;
-      document.getElementById("sidebarMeta").textContent = t.email;
+      document.getElementById("sidebarEmail").textContent = t.email;
       document.getElementById("sidebarClass").textContent = t.className;
       document.getElementById("sidebarSubject").textContent = t.subject;
-      document.getElementById("topClassBadge").textContent = `Class: ${t.className}`;
-      document.getElementById("statClass").textContent = t.className;
-      document.getElementById("classStudentsSubtitle").textContent = `Students in ${t.className}`;
-
-      // Avatar
-      const avatarEl = document.getElementById("sidebarAvatar");
-      if (t.imageUrl) {
-        avatarEl.innerHTML = `<img src="${t.imageUrl}" alt="${t.firstName}"/>`;
-      } else {
-        avatarEl.textContent = t.firstName.charAt(0).toUpperCase();
-      }
-
-      // Profile section
-      document.getElementById("profileFullName").textContent = `${t.firstName} ${t.lastName}`;
+      document.getElementById("topClass").textContent = `Class: ${t.className}`;
+      document.getElementById("statClassName").textContent = t.className;
+      document.getElementById("classSubtitle").textContent = `Students in ${t.className}`;
+      document.getElementById("profileName").textContent = `${t.firstName} ${t.lastName}`;
       document.getElementById("profileEmail").textContent = t.email;
       document.getElementById("profileClass").textContent = `Class: ${t.className}`;
       document.getElementById("profileSubject").textContent = `Subject: ${t.subject}`;
-      const profAv = document.getElementById("profileAvatar");
-      if (t.imageUrl) { profAv.innerHTML = `<img src="${t.imageUrl}" style="width:100%;height:100%;object-fit:cover"/>`; }
-      else { profAv.textContent = t.firstName.charAt(0).toUpperCase(); }
+      const av = document.getElementById("sidebarAvatar");
+      const pav = document.getElementById("profileAvatar");
+      if (t.imageUrl) {
+        av.innerHTML = `<img src="${t.imageUrl}" alt="${t.firstName}" style="width:100%;height:100%;object-fit:cover"/>`;
+        pav.innerHTML = `<img src="${t.imageUrl}" alt="${t.firstName}" style="width:100%;height:100%;object-fit:cover"/>`;
+      } else {
+        av.textContent = t.firstName.charAt(0).toUpperCase();
+        pav.textContent = t.firstName.charAt(0).toUpperCase();
+      }
     }
 
     populateSidebar(teacherData);
 
-    const pageTitles = { overview: "Dashboard Overview", students: "Class Students", upload: "Upload Result", myresults: "My Uploaded Results" };
+    const titles = { overview:"Dashboard", students:"Class Students", upload:"Upload Result", myresults:"My Uploads" };
+
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+      document.getElementById("overlay").classList.toggle("show");
+    }
+
+    function closeSidebar() {
+      document.getElementById("sidebar").classList.remove("open");
+      document.getElementById("overlay").classList.remove("show");
+    }
 
     function showSection(name) {
       document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
       document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
       document.getElementById("section-" + name).classList.add("active");
       document.querySelector(`[onclick="showSection('${name}')"]`).classList.add("active");
-      document.getElementById("pageTitle").textContent = pageTitles[name];
+      document.getElementById("pageTitle").textContent = titles[name];
+      closeSidebar();
       if (name === "students") loadClassStudents();
       if (name === "myresults") loadMyResults();
     }
@@ -416,7 +483,7 @@
         localStorage.setItem("teacherData", JSON.stringify(data.teacher));
         document.getElementById("statStudents").textContent = data.totalStudents;
         document.getElementById("statUploaded").textContent = data.totalResultsUploaded;
-      } catch (e) { console.error(e); }
+      } catch(e) { console.error(e); }
     }
 
     async function loadClassStudents() {
@@ -427,11 +494,11 @@
         const data = await res.json();
         if (!res.ok) { if (res.status === 401) logout(); return; }
         allStudents = data.students;
-        renderStudentsTable(allStudents);
-      } catch (e) { tbody.innerHTML = `<tr class="loading-row"><td colspan="4">Error loading.</td></tr>`; }
+        renderStudents(allStudents);
+      } catch(e) { tbody.innerHTML = `<tr class="loading-row"><td colspan="4">Error loading.</td></tr>`; }
     }
 
-    function renderStudentsTable(students) {
+    function renderStudents(students) {
       const tbody = document.getElementById("classStudentsTable");
       if (!students.length) { tbody.innerHTML = `<tr class="loading-row"><td colspan="4">No students found.</td></tr>`; return; }
       tbody.innerHTML = students.map((s, i) => `
@@ -445,28 +512,25 @@
 
     function filterStudents() {
       const q = document.getElementById("studentSearch").value.toLowerCase();
-      const filtered = allStudents.filter(s =>
-        s.fullName.toLowerCase().includes(q) || s.studentId.toLowerCase().includes(q)
-      );
-      renderStudentsTable(filtered);
+      const filtered = allStudents.filter(s => s.fullName.toLowerCase().includes(q) || s.studentId.toLowerCase().includes(q));
+      renderStudents(filtered);
     }
 
     async function lookupStudent() {
       const studentId = document.getElementById("lookupId").value.trim();
-      const lookupBox = document.getElementById("lookupBox");
-      const lookupError = document.getElementById("lookupError");
-      lookupBox.style.display = "none";
-      lookupError.style.display = "none";
-      if (!studentId) { lookupError.style.display = "block"; lookupError.textContent = "Enter a Student ID to verify."; return; }
+      const box = document.getElementById("lookupBox");
+      const err = document.getElementById("lookupError");
+      box.style.display = "none"; err.style.display = "none";
+      if (!studentId) { err.style.display = "block"; err.textContent = "Enter a Student ID first."; return; }
       try {
         const res = await fetch(`${API_BASE}/api/teacher/student/${encodeURIComponent(studentId)}`, { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json();
-        if (!res.ok) { lookupError.style.display = "block"; lookupError.textContent = data.message || "Student not found."; return; }
-        document.getElementById("lkStudentId").textContent = data.student.studentId;
-        document.getElementById("lkFullName").textContent = data.student.fullName;
+        if (!res.ok) { err.style.display = "block"; err.textContent = data.message || "Student not found."; return; }
+        document.getElementById("lkId").textContent = data.student.studentId;
+        document.getElementById("lkName").textContent = data.student.fullName;
         document.getElementById("lkClass").textContent = data.student.className;
-        lookupBox.style.display = "block";
-      } catch (e) { lookupError.style.display = "block"; lookupError.textContent = "Server error."; }
+        box.style.display = "block";
+      } catch(e) { err.style.display = "block"; err.textContent = "Server error."; }
     }
 
     async function uploadResult() {
@@ -474,15 +538,15 @@
       const term = document.getElementById("uploadTerm").value;
       const session = document.getElementById("uploadSession").value.trim();
       const file = document.getElementById("resultPdf").files[0];
-      const successBox = document.getElementById("uploadSuccess");
-      const errorBox = document.getElementById("uploadError");
-      successBox.style.display = "none"; errorBox.style.display = "none";
+      const sBox = document.getElementById("uploadSuccess");
+      const eBox = document.getElementById("uploadError");
+      sBox.style.display = "none"; eBox.style.display = "none";
 
-      if (!studentId || !term || !session || !file) {
-        errorBox.style.display = "block"; errorBox.textContent = "Please verify a student and fill all fields."; return;
-      }
       if (document.getElementById("lookupBox").style.display === "none") {
-        errorBox.style.display = "block"; errorBox.textContent = "Please verify the student first (Step 1)."; return;
+        eBox.style.display = "block"; eBox.textContent = "Please verify the student first (Step 1)."; return;
+      }
+      if (!term || !session || !file) {
+        eBox.style.display = "block"; eBox.textContent = "Please fill all fields and select a PDF."; return;
       }
 
       const formData = new FormData();
@@ -496,15 +560,15 @@
           method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData
         });
         const data = await res.json();
-        if (!res.ok) { errorBox.style.display = "block"; errorBox.textContent = data.message || "Upload failed."; return; }
-        successBox.style.display = "block"; successBox.textContent = "✅ Result uploaded successfully!";
+        if (!res.ok) { eBox.style.display = "block"; eBox.textContent = data.message || "Upload failed."; return; }
+        sBox.style.display = "block"; sBox.textContent = "✅ Result uploaded! Student PIN has been updated.";
         document.getElementById("lookupId").value = "";
         document.getElementById("uploadTerm").value = "";
         document.getElementById("uploadSession").value = "";
         document.getElementById("resultPdf").value = "";
         document.getElementById("lookupBox").style.display = "none";
         loadProfile();
-      } catch (e) { errorBox.style.display = "block"; errorBox.textContent = "Server error."; }
+      } catch(e) { eBox.style.display = "block"; eBox.textContent = "Server error."; }
     }
 
     async function loadMyResults() {
@@ -520,14 +584,14 @@
             <td><strong>${r.studentId}</strong></td>
             <td>${r.term}</td>
             <td>${r.session}</td>
-            <td>${new Date(r.createdAt).toLocaleDateString("en-GB", { day:"2-digit", month:"short", year:"numeric" })}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteResult('${r._id}')">Delete</button></td>
+            <td>${new Date(r.createdAt).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteMyResult('${r._id}')">Delete</button></td>
           </tr>`).join("");
-      } catch (e) { tbody.innerHTML = `<tr class="loading-row"><td colspan="5">Error.</td></tr>`; }
+      } catch(e) { tbody.innerHTML = `<tr class="loading-row"><td colspan="5">Error.</td></tr>`; }
     }
 
-    async function deleteResult(resultId) {
-      if (!confirm("Delete this result? This cannot be undone.")) return;
+    async function deleteMyResult(resultId) {
+      if (!confirm("Delete this result?")) return;
       try {
         const res = await fetch(`${API_BASE}/api/teacher/results/${resultId}`, {
           method: "DELETE", headers: { Authorization: `Bearer ${token}` }
@@ -535,7 +599,7 @@
         const data = await res.json();
         if (!res.ok) { alert(data.message || "Failed."); return; }
         loadMyResults(); loadProfile();
-      } catch (e) { alert("Server error."); }
+      } catch(e) { alert("Server error."); }
     }
 
     loadProfile();
